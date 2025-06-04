@@ -1,117 +1,95 @@
 #include "list.h"
-#include <stdexcept>
+#include <iostream>
+#include <utility>
 
-// === LinkedList core ===
-LinkedList::LinkedList() = default;
+using namespace std;
 
-/* TODO: deep-copy constructor 
- * Implement a copy constructor that creates a deep copy of the linked list.
- * This means:
- * 1. Create a new empty list
- * 2. Use the deepCopy helper function to copy the chain
- * 3. Set the head pointer to the result of deepCopy
- * 
- * Example:
- * If other is [1 → 2 → 3]
- * Create a new list with nodes containing 1, 2, and 3
- * Do not just copy the head pointer (that would be a shallow copy)
- * 
- * Hint: Use the deepCopy helper function to do the actual copying
-*/
+// Constructor
+LinkedList::LinkedList() : head(nullptr) {}
+
+// Copy constructor (deep copy)
 LinkedList::LinkedList(const LinkedList& other) {
-    /* your code */
+    head = deepCopy(other.head);
 }
 
-/* TODO: assignment operator using copy-and-swap
- * Implement the assignment operator using the copy-and-swap idiom.
- * This means:
- * 1. Take the parameter by value (this creates a copy)
- * 2. Swap the contents of this list with the copy
- * 3. Return *this
- * 
- * The copy-and-swap idiom provides strong exception safety
- * and automatically handles self-assignment.
- * 
- * Example:
- * LinkedList a, b;
- * a = b;  // This should copy b's contents to a
-*/
+// Copy assignment using copy-and-swap idiom
 LinkedList& LinkedList::operator=(LinkedList rhs) {
-    /* your code */
+    swap(head, rhs.head);
     return *this;
 }
 
-LinkedList::~LinkedList() { freeChain(head); }
+// Destructor
+LinkedList::~LinkedList() {
+    freeChain(head);
+}
 
+// Prepend: insert at front
 void LinkedList::prepend(int value) {
-    head = new Node{value, head};
+    Node* newNode = new Node{value, head};
+    head = newNode;
 }
 
-/* TODO: append implementation
- * Add a new node with the given value at the end of the list.
- * Steps:
- * 1. Create a new node with the given value
- * 2. If the list is empty, set head to the new node
- * 3. Otherwise, traverse to the last node
- * 4. Set the last node's next pointer to the new node
- * 
- * Example:
- * If list is [1 → 2] and we append(3)
- * Result should be [1 → 2 → 3]
-*/
+// Append: insert at end
 void LinkedList::append(int value) {
-    /* your code */
-}
-
-/* TODO: removeFront implementation
- * Remove and return the first element from the list.
- * Steps:
- * 1. Check if list is empty (use isEmpty())
- * 2. Save the data from the first node
- * 3. Update head to point to the second node
- * 4. Delete the first node
- * 5. Return the saved data
- * 
- * Example:
- * If list is [1 → 2 → 3]
- * removeFront() should return 1 and leave [2 → 3]
-*/
-int LinkedList::removeFront() {
-    if (isEmpty()) throw runtime_error("removeFront on empty list");
-    return 0; // placeholder
-}
-
-bool LinkedList::isEmpty() const { return head == nullptr; }
-
-void LinkedList::print(ostream& out) const {
-    out << '[';
-    for (Node* cur = head; cur; cur = cur->next) {
-        out << cur->data;
-        if (cur->next) out << " → ";
+    Node* newNode = new Node{value, nullptr};
+    if (head == nullptr) {
+        head = newNode;
+        return;
     }
-    out << ']';
+    Node* current = head;
+    while (current->next != nullptr) {
+        current = current->next;
+    }
+    current->next = newNode;
 }
 
-// === private helpers ===
-/* TODO: deepCopy implementation
- * Create a deep copy of a linked list starting from the given node.
- * Steps:
- * 1. If the source node is null, return null
- * 2. Create a new node with the same data as the source
- * 3. Recursively copy the rest of the list
- * 4. Return the new node
- * 
- * Example:
- * If src points to [1 → 2 → 3]
- * Return a new list [1 → 2 → 3] with new nodes
-*/
+// Remove front node
+int LinkedList::removeFront() {
+    if (isEmpty()) {
+        throw std::runtime_error("List is empty");
+    }
+    Node* oldHead = head;
+    int value = oldHead->data;
+    head = head->next;
+    delete oldHead;
+    return value;
+}
+
+// Check if list is empty
+bool LinkedList::isEmpty() const {
+    return head == nullptr;
+}
+
+// Print the list
+void LinkedList::print(ostream& out) const {
+    Node* current = head;
+    while (current != nullptr) {
+        out << current->data;
+        if (current->next != nullptr) {
+            out << " -> ";
+        }
+        current = current->next;
+    }
+    out << endl;
+}
+
+// Deep copy utility
 LinkedList::Node* LinkedList::deepCopy(Node* src) {
-    /* your code */
-    return nullptr;
+    if (src == nullptr) return nullptr;
+    Node* newHead = new Node{src->data, nullptr};
+    Node* currentNew = newHead;
+    Node* currentSrc = src->next;
+    while (currentSrc != nullptr) {
+        currentNew->next = new Node{currentSrc->data, nullptr};
+        currentNew = currentNew->next;
+        currentSrc = currentSrc->next;
+    }
+    return newHead;
 }
 
+// Free memory utility
 void LinkedList::freeChain(Node* n) {
-    while (n) {
+    while (n != nullptr) {
         Node* next = n->next;
         delete n;
         n = next;
